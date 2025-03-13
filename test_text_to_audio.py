@@ -46,6 +46,12 @@ class AudioStreamer:
 
 
     async def send_session_update(self, ws):
+        """
+        Initialize the setup session. System prompt will be updated if no initialization,
+        then default session config will be used.
+        
+        https://platform.openai.com/docs/api-reference/realtime-client-events
+        """
         session_config = {
             "modalities": ["audio", "text"],
             "instructions": SYSTEM_PROMPT,
@@ -75,9 +81,6 @@ class AudioStreamer:
                 "OpenAI-Beta": "realtime=v1",
             },
         ) as ws:
-            # https://platform.openai.com/docs/api-reference/realtime-client-events
-            # initialize the setup session. System prompt will be updated
-            # if no initialization, then default session config will be used
             await self.send_session_update(ws)
 
             async for msg in ws:
