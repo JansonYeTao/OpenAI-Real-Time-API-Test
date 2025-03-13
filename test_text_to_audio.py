@@ -6,6 +6,9 @@ import pyaudio
 import shutil
 import websockets
 
+from utils import pretty_print
+
+
 URI = "wss://api.openai.com/v1/realtime?model=gpt-4o-mini-realtime-preview-2024-12-17"
 SYSTEM_PROMPT = """
 Your name is Tao Ye. You speak quickly so that user can understand what you are saying.
@@ -63,6 +66,8 @@ class AudioStreamer:
 
 
     async def receive_and_stream(self):
+        """Receive event from openai server and stream out audio."""
+
         async with websockets.connect(
             uri=URI,
             extra_headers={
@@ -70,14 +75,13 @@ class AudioStreamer:
                 "OpenAI-Beta": "realtime=v1",
             },
         ) as ws:
-            await self.send_session_update(ws) # initialize the setup session.
+            # https://platform.openai.com/docs/api-reference/realtime-client-events
+            # initialize the setup session. System prompt will be updated
+            # if no initialization, then default session config will be used
+            await self.send_session_update(ws)
 
             async for msg in ws:
-                # print as much of the raw event as will fit on the terminal
-                columns, rows = shutil.get_terminal_size()
-                maxl = columns - 5
-                print(msg if len(msg) <= maxl else (msg[:maxl] + " ..."))
-
+                pretty_print(msg)
                 # Event handler
                 evt = json.loads(msg)
                 if evt["type"] == "session.created":
